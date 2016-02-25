@@ -1,0 +1,13 @@
+[package]
+name = "arx"
+version = "0.0.0"
+authors = ["Jason Dusek <jason.dusek@gmail.com>"]
+
+
+[lib]
+name = "arx"
+
+
+[dependencies]
+yaml-rust = "0.3.0"
+clap = "2"
