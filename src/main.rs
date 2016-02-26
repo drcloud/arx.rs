@@ -64,34 +64,55 @@ fn mode(matches: ArgMatches) -> Mode {
     let execute = matches.is_present("execute");
     let shell = matches.is_present("as-shell");
     let varargs = many(&matches, &"strings");
+    let (cmd, argv) = if varargs.len() > 0 {
+                          (Some(varargs[0].clone()),
+                           varargs.iter().skip(1).map(|s| s.clone()).collect())
+                      } else {
+                          (None, vec!())
+                      };
     match matches.subcommand() {
         (name, Some(m)) => match name {
             "code" => Code(req(m, &"cmd"), many(m, &"args")),
             "data" => Data(req(m, &"url"), opt(m, &"destination")),
             _ => panic!("No such subcommand: {}", name),
         },
-        _ if execute && shell => match varargs.split_first() {
-            Some((cmd, args)) => ExecuteShell(cmd.clone(), args.to_vec()),
-            _ => panic!("No file specified."),
+        _ if execute && shell => ExecuteShell(cmd.into(), argv),
+        _ if execute => Execute(cmd.into(), argv),
+        _ if shell => if argv.len() == 0 {
+            Shell(cmd.into())
+        } else {
+            panic!("Please pass only one argument to `-s` or add `-f`.")
         },
-        _ if execute => match varargs.split_first() {
-            Some((cmd, args)) => Execute(cmd.clone(), args.to_vec()),
-            _ => panic!("No file specified."),
-        },
-        _ if shell => match varargs.split_first() {
-            Some((cmd, args)) if args.len() == 0 => Shell(cmd.clone()),
-            _ => panic!("No file specified."),
-        },
-        _ => Filter(varargs),
+        _ => Filter(varargs.iter().map(|s| s.clone().into()).collect()),
+    }
+}
+
+#[derive(Debug)]
+pub enum Input {
+    File(String),
+    StdIO
+}
+
+use Input::*;
+
+impl Into<Input> for String {
+    fn into(self) -> Input {
+        if "-" == self { StdIO } else { File(self) }
+    }
+}
+
+impl Into<Input> for Option<String> {
+    fn into(self) -> Input {
+        self.map(|s| s.into()).unwrap_or(StdIO)
     }
 }
 
 #[derive(Debug)]
 enum Mode {
-    Filter(Vec<String>),
-    Shell(String),
-    Execute(String, Vec<String>),
-    ExecuteShell(String, Vec<String>),
+    Filter(Vec<Input>),
+    Shell(Input),
+    Execute(Input, Vec<String>),
+    ExecuteShell(Input, Vec<String>),
     Code(String, Vec<String>),
     Data(String, Option<String>),
 }
