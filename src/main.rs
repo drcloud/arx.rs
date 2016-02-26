@@ -5,10 +5,10 @@ use clap::{App, Arg, ArgMatches, SubCommand};
 extern crate arx;
 
 const HELP: &'static str = "
-USAGE:  arx        <spec-file>+    > <target>
-        arx     <  <spec-file>     > <target>
-        arx -s     <shell-script>  > <target>
-        arx -s  <  <shell-script>  > <target>
+USAGE:  arx        <spec-file>+    >  <target>
+        arx     <  <spec-file>     >  <target>
+        arx -s     <shell-script>  >  <target>
+        arx -s  <  <shell-script>  >  <target>
         arx -f [-s] <file> <args>*
         arx data <url> <destination>?
         arx code <cmd> <args>*
