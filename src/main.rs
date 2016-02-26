@@ -56,35 +56,7 @@ pub fn main() {
                              .subcommand(code)
                              .subcommand(data);
     let matches = app.get_matches();
-    println!("{:?}", mode(matches));
-}
-
-
-fn mode(matches: ArgMatches) -> Mode {
-    let execute = matches.is_present("execute");
-    let shell = matches.is_present("as-shell");
-    let varargs = many(&matches, &"strings");
-    let (cmd, argv) = if varargs.len() > 0 {
-                          (Some(varargs[0].clone()),
-                           varargs.iter().skip(1).map(|s| s.clone()).collect())
-                      } else {
-                          (None, vec!())
-                      };
-    match matches.subcommand() {
-        (name, Some(m)) => match name {
-            "code" => Code(req(m, &"cmd"), many(m, &"args")),
-            "data" => Data(req(m, &"url"), opt(m, &"destination")),
-            _ => panic!("No such subcommand: {}", name),
-        },
-        _ if execute && shell => ExecuteShell(cmd.into(), argv),
-        _ if execute => Execute(cmd.into(), argv),
-        _ if shell => if argv.len() == 0 {
-            Shell(cmd.into())
-        } else {
-            panic!("Please pass only one argument to `-s` or add `-f`.")
-        },
-        _ => Filter(varargs.iter().map(|s| s.clone().into()).collect()),
-    }
+    println!("{:?}", Mode::from(matches));
 }
 
 #[derive(Debug)]
@@ -119,6 +91,35 @@ enum Mode {
 
 use Mode::*;
 
+impl<'a> From<ArgMatches<'a>> for Mode {
+    fn from(matches: ArgMatches) -> Self {
+        let execute = matches.is_present("execute");
+        let shell = matches.is_present("as-shell");
+        let varargs: Vec<String> = many(&matches, &"strings");
+        let (cmd, argv) = if varargs.len() > 0 {
+                              (Some(varargs[0].clone()), tail(&varargs))
+                          } else {
+                              (None, vec!())
+                          };
+        match matches.subcommand() {
+            (name, Some(m)) => match name {
+                "code" => Code(req(m, &"cmd"), many(m, &"args")),
+                "data" => Data(req(m, &"url"), opt(m, &"destination")),
+                _ => panic!("No such subcommand: {}", name),
+            },
+            _ if execute && shell => ExecuteShell(cmd.into(), argv),
+            _ if execute => Execute(cmd.into(), argv),
+            _ if shell => if argv.len() == 0 {
+                Shell(cmd.into())
+            } else {
+                panic!("Please pass only one argument to `-s` or add `-f`.")
+            },
+            _ => Filter(varargs.iter().map(|s| s.clone().into()).collect()),
+        }
+    }
+}
+
+
 fn many<S: AsRef<str>>(m: &ArgMatches, key: &S) -> Vec<String> {
     if m.is_present(key) {
         m.values_of(key).unwrap().map(|s| s.into()).collect()
@@ -133,4 +134,8 @@ fn req<S: AsRef<str>>(m: &ArgMatches, key: &S) -> String {
 
 fn opt<S: AsRef<str>>(m: &ArgMatches, key: &S) -> Option<String> {
     m.value_of(key).map(|s| s.into())
+}
+
+fn tail(vec: &Vec<String>) -> Vec<String> {
+    vec.iter().skip(1).map(|s| s.clone()).collect()
 }
