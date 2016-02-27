@@ -1,0 +1,28 @@
+
+<manifest>    = [<task>] | <task>
+
+<task>        = (cwd: <string>)?
+                (env: <map>)?
+                (label: <string>)?
+                (code: [<code>])?
+                (data: [<data>])?
+
+<code>        = [<string>]
+              | <command>
+                (formerly: <string>)?
+                (args: [<string>])?
+                (pwd: <string>)?
+                (env: <map>)?
+                (label: <string>)?
+
+<command>     = cmd: <string>
+              | cmd: [<string>]
+              | source: <string>
+
+<data>        = <string>
+              | <string>: <string>
+              | source: <string>
+                (formerly: <string>)?
+                (pwd: <string>)?
+                (target: <string>)?
+
