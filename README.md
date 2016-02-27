@@ -6,7 +6,8 @@ deployment scripts and even things like pre-commit from Yelp: executing a
 simple specification of a task to run, in terms of commands, URLs and source
 code to checkout.
 
-The Arx format is simple:
+Arx accepts YAML or JSON format documents that describe a task and its
+dependencies. The Arx format is simple:
 
 ```yaml
 code:
