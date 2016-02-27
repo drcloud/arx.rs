@@ -56,7 +56,8 @@ pub fn main() {
                              .subcommand(code)
                              .subcommand(data);
     let matches = app.get_matches();
-    println!("{:?}", Mode::from(matches));
+    let mode = Mode::from(matches);
+    println!("{:?}", mode);
 }
 
 #[derive(Debug)]
@@ -95,7 +96,7 @@ impl<'a> From<ArgMatches<'a>> for Mode {
     fn from(matches: ArgMatches) -> Self {
         let execute = matches.is_present("execute");
         let shell = matches.is_present("as-shell");
-        let varargs: Vec<String> = many(&matches, &"strings");
+        let varargs = many(&matches, &"strings");
         let (cmd, argv) = if varargs.len() > 0 {
                               (Some(varargs[0].clone()), tail(&varargs))
                           } else {
